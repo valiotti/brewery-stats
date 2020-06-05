@@ -52,9 +52,6 @@ for brewery_id in brewery_ids:
     data_to_insert_in_brewery_info.append(item['response']['brewery']['stats']['weekly_count'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['stats']['user_count'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['stats']['age_on_service'])
-    for item in data_to_insert_in_brewery_info:
-        if item is None:
-            item = "None"
     client.execute(f'INSERT INTO brewery_info VALUES {tuple(data_to_insert_in_brewery_info)}')
     time.sleep(37)
 print('Закончили!')
