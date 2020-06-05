@@ -22,9 +22,9 @@ for brewery_id in brewery_ids:
     item = response.json()
     data_to_insert_in_brewery_info = []
     data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_id'])
-    data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_name'])
-    data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_slug'])
-    data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_label'])
+    data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_name'].replace("'", "").replace("`", ""))
+    data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_slug'].replace("'", "").replace("`", ""))
+    data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_label'].replace("'", "").replace("`", ""))
     data_to_insert_in_brewery_info.append(item['response']['brewery']['country_name'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_in_production'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['is_independent'])
@@ -52,6 +52,9 @@ for brewery_id in brewery_ids:
     data_to_insert_in_brewery_info.append(item['response']['brewery']['stats']['weekly_count'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['stats']['user_count'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['stats']['age_on_service'])
+    for item in data_to_insert_in_brewery_info:
+        if item is None:
+            data_to_insert_in_brewery_info = "none"
     client.execute(f'INSERT INTO brewery_info VALUES {tuple(data_to_insert_in_brewery_info)}')
     time.sleep(37)
 print('Закончили!')
