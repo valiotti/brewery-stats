@@ -39,7 +39,7 @@ for brewery_id in brewery_ids:
     data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_type'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['brewery_type_id'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['location']['brewery_address'])
-    data_to_insert_in_brewery_info.append((item['response']['brewery']['location']['brewery_city']).replace("'", "").replace("`", "")))
+    data_to_insert_in_brewery_info.append((item['response']['brewery']['location']['brewery_city']).replace("'", "").replace("`", ""))
     data_to_insert_in_brewery_info.append(item['response']['brewery']['location']['brewery_state'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['location']['brewery_lat'])
     data_to_insert_in_brewery_info.append(item['response']['brewery']['location']['brewery_lng'])
