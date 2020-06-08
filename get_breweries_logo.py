@@ -11,5 +11,5 @@ ids = flatten(ids)
 for brewery_id, brewery_labes in zip(ids, labels):
     fname = brewery_id
     img_data = requests.get(brewery_labes).content
-    with open(f'brewery_logo/{fname}', 'wb') as handler:
+    with open(f'brewery_logo/{fname}.jpg', 'wb') as handler:
         handler.write(img_data)
