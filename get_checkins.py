@@ -12,6 +12,7 @@ count_of_inserted_users = 0
 count_of_inserted_beers = 0
 count_of_inserted_venues = 0
 count_of_collected_checkins = 0
+offset = 0
 flatten = lambda lst: [item for sublist in lst for item in sublist]
 ids = client.execute(f'SELECT brewery_id FROM brewery_info')
 ids_list = flatten(ids)
@@ -25,6 +26,8 @@ for brewery_id in ids_list:
                                    'max_id': max_id
                                })
         item = response.json()
+        offset += item['response']['checkins']['count']
+        count_of_collected_checkins += item['response']['checkins']['count']
         max_id = item['response']['pagination']['max_id']
         for checkin in item['response']['checkins']['items']:
             # beer_reviews
@@ -129,9 +132,7 @@ for brewery_id in ids_list:
                     print('count_of_inserted_venues:', count_of_inserted_venues)
             except TypeError:
                 pass
-            offset += item['response']['checkins']['count']
-            count_of_collected_checkins += item['response']['checkins']['count']
-            time.sleep(37)
-            item = 0
-    log_tuple = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), checkin['brewery']['brewery_id'], offset, count_of_collected_checkins)
+        time.sleep(37)
+        item = 0
+    log_tuple = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), brewery_id, offset, count_of_collected_checkins)
     client.execute(f'INSERT INTO log_brewery_checkins VALUES {log_tuple}')
