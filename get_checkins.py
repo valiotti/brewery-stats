@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 from clickhouse_driver import Client
+from clickhouse_driver import errors
 import requests
 
 
@@ -12,23 +13,22 @@ count_of_inserted_users = 0
 count_of_inserted_beers = 0
 count_of_inserted_venues = 0
 count_of_collected_checkins = 0
-offset = 0
 flatten = lambda lst: [item for sublist in lst for item in sublist]
 ids = client.execute(f'SELECT brewery_id FROM brewery_info')
 ids_list = flatten(ids)
 for brewery_id in ids_list:
-    offset = 0
     max_id = 0
     while max_id != '':
-        print('brewery_id:', brewery_id, 'offset:', offset, 'collected:', count_of_collected_checkins)
+        print('brewery_id:', brewery_id, 'collected:', count_of_collected_checkins)
         response = requests.get(f'https://api.untappd.com/v4/brewery/checkins/{brewery_id}?client_id={client_id}&client_secret={client_secret}',
                                params={
                                    'max_id': max_id
                                })
         item = response.json()
-        offset += item['response']['checkins']['count']
         count_of_collected_checkins += item['response']['checkins']['count']
+        first_id = item['response']['checkins']['items'][0]['checkin_id']
         max_id = item['response']['pagination']['max_id']
+        
         for checkin in item['response']['checkins']['items']:
             # beer_reviews
             checkin_id = checkin['checkin_id']
@@ -49,7 +49,10 @@ for brewery_id in ids_list:
                 for index, element in enumerate(insert_into_beer_reviews):
                     if element is None:
                         insert_into_beer_reviews[index] = ''
-                client.execute(f'INSERT INTO beer_reviews VALUES {tuple(insert_into_beer_reviews)}')
+                try:
+                    client.execute(f'INSERT INTO beer_reviews VALUES {tuple(insert_into_beer_reviews)}')
+                except errors.ServerException as E:
+                    print(E)
                 count_of_inserted_beer_reviews += 1
                 print('count_of_inserted_beer_reviews:', count_of_inserted_beer_reviews)
             # users
@@ -70,7 +73,10 @@ for brewery_id in ids_list:
                 for index, element in enumerate(insert_into_users):
                     if element is None:
                         insert_into_users[index] = ''
-                client.execute(f'INSERT INTO users VALUES {tuple(insert_into_users)}')
+                try:
+                    client.execute(f'INSERT INTO users VALUES {tuple(insert_into_users)}')
+                except errors.ServerException as E:
+                    print(E)
                 count_of_inserted_users += 1
                 print('count_of_inserted_users:', count_of_inserted_users)
             # beers
@@ -91,7 +97,10 @@ for brewery_id in ids_list:
                 for index, element in enumerate(insert_into_beers):
                     if element is None:
                         insert_into_beers[index] = ''
-                client.execute(f'INSERT INTO beers VALUES {tuple(insert_into_beers)}')
+                try:
+                    client.execute(f'INSERT INTO beers VALUES {tuple(insert_into_beers)}')
+                except errors.ServerException as E:
+                    print(E)
                 count_of_inserted_beers += 1
                 print('count_of_inserted_beers:', count_of_inserted_beers)
             # venues
@@ -127,12 +136,21 @@ for brewery_id in ids_list:
                         if element is None:
                             insert_into_venue[index] = ''
                     print('venues:', insert_into_venue)
-                    client.execute(f'INSERT INTO venues VALUES {tuple(insert_into_venue)}')
+                    try:
+                        client.execute(f'INSERT INTO venues VALUES {tuple(insert_into_venue)}')
+                    except errors.ServerException as E:
+                        print(E)
                     count_of_inserted_venues += 1
                     print('count_of_inserted_venues:', count_of_inserted_venues)
             except TypeError:
                 pass
+        detailed_log_tuple = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), brewery_id, count_of_collected_checkins, first_id, max_id)
+        try:
+            client.execute(f'INSERT INTO log_brewery_checkins_detailed VALUES {detailed_log_tuple}')
+        except errors.ServerException as E:
+            print(E)
         time.sleep(37)
         item = 0
-    log_tuple = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), brewery_id, offset, count_of_collected_checkins)
+    log_tuple = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), brewery_id, count_of_collected_checkins)
     client.execute(f'INSERT INTO log_brewery_checkins VALUES {log_tuple}')
+    count_of_collected_checkins = 0
